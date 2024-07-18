@@ -26,22 +26,27 @@ int main(int argc, char const *argv[]) {
     message = argv[3];
     msg_size = strlen(message);
 
-    file_open = open(file_path, O_WRONLY);
+    printf("before file open\n");
+    file_open = open(file_path, O_RDWR);
+    printf("after file open\n");
     if (file_open < 0){
         perror("opening the device file has failed");
         exit(1);
     }
 
+    printf("before ioctl\n");
     chID_set = ioctl(file_open, MSG_SLOT_CHANNEL, &channel_id);
+    printf("after ioctl\n");
     if (chID_set != 0){
         close(file_open);
         perror("setting channel id to the id you provided has failed");
         exit(1);
     }
 
-    
+    printf("before write\n");
     bytes_num = write(file_open, message, msg_size);
-    if (bytes_num < 0){
+    printf("after write\n");
+    if (bytes_num != msg_size){
         close(file_open);
         perror("writing the message has failed");
         exit(1);

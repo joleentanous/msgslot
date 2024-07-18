@@ -25,7 +25,7 @@ without any additional text.
 
 int main(int argc, char const *argv[]) {
     int file_open, chID_set, bytes_num;
-    unsigned int channel_id;
+    unsigned long channel_id;
     const char* file_path;
     char message_buf[MAX_MSG_LEN + 1];
 
@@ -37,13 +37,13 @@ int main(int argc, char const *argv[]) {
     file_path = argv[1];
     channel_id = atoi(argv[2]);
 
-    file_open = open(file_path, O_RDONLY);
+    file_open = open(file_path, O_RDWR);
     if (file_open < 0){
         perror("opening the device file has failed");
         exit(1);
     }
 
-    chID_set = ioctl(file_open, MSG_SLOT_CHANNEL, &channel_id);
+    chID_set = ioctl(file_open, MSG_SLOT_CHANNEL, channel_id);
     if (chID_set !=0 ){
         perror("setting channel id to the id you provided has failed");
         exit(1);

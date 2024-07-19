@@ -15,23 +15,9 @@ MODULE_DESCRIPTION("Message Slot Module Implementation");
 
 file_data* devices[256];
 
-/*
-file_data* find_data(unsigned int minor) {
-    int i;
-    for (i = 0; i < 256; i++) {
-        if (devices[i]){
-            if (devices[i]->minor == minor){
-                return devices[i];
-            }
-        }
-    }
-    return NULL;
-}
-*/
-
+//helper function to create files
 file_data* create_data(unsigned int minor) {
     int i;
-    printk(KERN_INFO "1\n");
 
     for (i = 0; i < 256; i++) {
         if (devices[i] == NULL) {
@@ -56,7 +42,7 @@ static int device_open(struct inode* inode, struct file* file) {
     int i;
     file_data *data;
     minor = iminor(inode);    
-    //data = find_data(minor);
+    //finding data in devices array
     data = NULL;
     for (i = 0; i < 256; i++) {
         if (devices[i]){
@@ -66,7 +52,7 @@ static int device_open(struct inode* inode, struct file* file) {
         }
     }
 
-
+    //data not found
     if (data == NULL) {
         data = create_data(minor);
         if (data == NULL) {
@@ -83,7 +69,6 @@ static ssize_t device_read(struct file* file, char __user* buffer, size_t length
     file_data *data;
     unsigned long copy_val;
     channel *channel;    
-	printk(KERN_INFO "4\n");
    
     
     data = (file_data*)file->private_data;
@@ -114,7 +99,6 @@ static ssize_t device_read(struct file* file, char __user* buffer, size_t length
         printk(KERN_ERR "Failed to copy message to user space\n");
         return -EFAULT;
     }
-    printk(KERN_INFO "5\n");
 
     return channel->message_length;
 }
@@ -129,7 +113,6 @@ static ssize_t device_write(struct file* file, const char __user* buffer, size_t
     data = (file_data*)file->private_data;
     channel = data->working_channel;
 
-    printk(KERN_INFO "6\n");
 
     if ((channel == NULL) || buffer == NULL) {
         printk(KERN_ERR "Invalid write parameters\n");
@@ -146,22 +129,14 @@ static ssize_t device_write(struct file* file, const char __user* buffer, size_t
         return -EFAULT;
     }
 
-    /*
-    channel->message = kmalloc(MAX_MSG_LEN, GFP_KERNEL);
-    if (channel->message == NULL) {
-        printk(KERN_ERR "Failed to allocate memory for message\n");
-        return -ENOMEM;
-    }
-    */
+   
 
-    //printk(KERN_ERR "before copy from user\n");
     copy_val = copy_from_user(channel->message, buffer, length);
     if (copy_val) {
         printk(KERN_ERR "Failed to copy message from user space\n");
-        return -EFAULT;  // Failed to copy from user space
+        return -EFAULT;  
     }
     channel->message_length = length;
-    printk(KERN_INFO "7\n");
 
     return length;
 }
@@ -193,12 +168,14 @@ static long device_ioctl(struct file* file, unsigned int cmd_id, unsigned long a
         head_ch = head_ch->next_ch;
     }
 
+    //allocate memory for head channel
     head_ch = kmalloc(sizeof(channel), GFP_KERNEL); //insert first
     if (head_ch == NULL) {
         printk(KERN_ERR "Failed to allocate memory for new channel\n");
         return -ENOMEM;
     }
 
+    //initializations
     head_ch->ch_id = arg_id;
     head_ch->message_length = 0;
     head_ch->next_ch = data->channels_head;
@@ -247,6 +224,7 @@ static int __init message_slot_init(void){
 }
 
 
+//helper function to free data in exist
 static void free_data(void){
     channel *head, *tmp;
     int i;

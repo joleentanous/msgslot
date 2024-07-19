@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         perror("invalid number of arguements provided!");
         exit(1);
     }
-
+    //open the file
     file_open = open(argv[1], O_RDWR);
     if (file_open < 0) {
         perror("opening the device file has failed");
